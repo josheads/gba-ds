@@ -5180,6 +5180,50 @@ static const char* er_compose(Emu* s, const void* state, uint32_t* out, int w, i
 	return NULL;
 }
 
+/* ------------------------------------------------------------- Drill Dozer
+ *
+ * Global state at 0x020345C8 (USA, V49E): +0x04 main mode (0 title / file /
+ * room-load fade, 1 live stage play, 2 door fade-out, 3 dying / Continue,
+ * 6 menus / Trailer hub / world map / stage scenes, 7 stage intro scene),
+ * +0x0A menu sub-screen (2 on in-stage SELECT Equipment and its Help manual:
+ * Equipment is GBA Mode 1, Help Mode 0), +0x0F area (0 on title / file),
+ * +0x10..0x12 stage, drill type and room ID, +0x1E control lock (0 in live
+ * control), +0x38 loaded room pointer (0 outside stages, and briefly while a
+ * door loads at mode 0), +0x73..0x74 drill bit and energy tanks, +0x95
+ * outfit, +0xEF..0xF0 stage gears, +0xF4 current energy (halfword, 0 dead). */
+#define DD_MODE 0x020345CC
+#define DD_SUB 0x020345D2
+#define DD_AREA 0x020345D7
+#define DD_STAGE 0x020345D8
+#define DD_TYPE 0x020345D9
+#define DD_ROOM 0x020345DA
+#define DD_LOCK 0x020345E6
+#define DD_ROOM_PTR 0x02034600
+#define DD_BIT 0x0203463B
+#define DD_TANKS 0x0203463C
+#define DD_OUTFIT 0x0203465D
+#define DD_GEAR2 0x020346B7
+#define DD_GEAR3 0x020346B8
+#define DD_ENERGY 0x020346BC
+#define DD_V_OFFSTAGE 0xF0000090 /* 1 outside a stage, or once energy hits 0 (DD-6) */
+#define DD_V_EQ_OPEN 0xF0000091  /* 1 while SELECT's Equipment screen itself is up (DD-5) */
+#define DD_V_KEY 0xF0000092      /* stage, room, drill type, bit, tanks, gears and outfit (DD-3) */
+static uint32_t dd_virt(Emu* e, uint32_t addr) {
+	if (addr == DD_V_OFFSTAGE) {
+		uint8_t cc = emu_read8(e, DD_MODE);
+		if (emu_read8(e, DD_AREA) == 0 || emu_read16(e, DD_ENERGY) == 0 || cc == 3 || cc == 7) return 1;
+		return cc == 6 && emu_read32(e, DD_ROOM_PTR) == 0;
+	}
+	if (addr == DD_V_EQ_OPEN)
+		return emu_read8(e, DD_MODE) == 6 && emu_read8(e, DD_SUB) == 2 && (emu_read16(e, 0x04000000) & 7) == 1;
+	if (addr == DD_V_KEY)
+		return (uint32_t) emu_read8(e, DD_ROOM) | (uint32_t) emu_read8(e, DD_TYPE) << 8 |
+		       (uint32_t) emu_read8(e, DD_STAGE) << 10 | (uint32_t) emu_read8(e, DD_BIT) << 16 |
+		       (uint32_t) emu_read8(e, DD_TANKS) << 18 | (uint32_t) (emu_read8(e, DD_GEAR2) != 0) << 22 |
+		       (uint32_t) (emu_read8(e, DD_GEAR3) != 0) << 23 | (uint32_t) emu_read8(e, DD_OUTFIT) << 24;
+	return 0;
+}
+
 static const MapProfile profiles[] = {
 	{
 		.codes = { "A2CE" },
@@ -7450,6 +7494,42 @@ static const MapProfile profiles[] = {
 		.logo = { .steps = { { 0, 600 }, { K_A, 4 }, { 0, 100 }, { K_START, 4 }, { 0, 90 }, { K_START, 4 }, { 0, 90 },
 		                     { K_START, 4 }, { 0, 90 }, { K_START, 4 }, { 0, 90 }, { K_START, 4 }, { 0, 240 } },
 		          .layer = 2, .maxY = 120 },
+	},
+	{
+		/* Drill Dozer (USA; Europe's Virtual Console and Japan's Screw
+		 * Breaker not yet checked). In a stage, SELECT's Equipment screen
+		 * fades in over ~62 frames and resets its own animation counter to
+		 * 0 each time, so a still capture settles on the same pose every
+		 * refresh (DD-2). The live HUD stays on the game screen (DD-4). */
+		.codes = { "V49E" },
+		.title = "Drill Dozer",
+		.open = { { K_SELECT, 4 } },
+		.settleMax = 95, .openWithin = 70, .stableFrames = 4, .maxDiff = 600,
+		.crop_x = 0, .crop_y = 0, .crop_w = 240, .crop_h = 160,
+		/* map_crop: hide the (A) and (B) prompt sprites (palette 12, bottom
+		 * right) and replace BG0's "Help" and "Back" words with BG1/BG2's
+		 * orange stripes behind them, leaving BG1's corner screw (DD-2) */
+		.captureHide = { { 150, 132, 184, 160, 0, 1023, -1, 1u << 12 } },
+		.underRect = { { 174, 136, 212, 159 } }, .underLayers = 0x06,
+		/* Equipment's header badge and bar, right-edge lavender border,
+		 * Energy value plate and top-right orange stripe, once faded in */
+		.probes = { { 82, 10, 0xFFFFF7 }, { 20, 8, 0x636373 }, { 235, 28, 0xC67BEF },
+		            { 105, 142, 0x84BDFF }, { 220, 10, 0xFF9C52 } },
+		.tolerance = 10,
+		.mem = { { DD_MODE, 0xFF, 0x06, 1 }, { DD_SUB, 0xFF, 0x02, 1 }, { 0x04000000, 0x0007, 0x0001, 2 } },
+		/* in a stage with live control and Jill alive; START's Save menu,
+		 * Help, conversations and doors keep the last picture (DD-5) */
+		.live = { { DD_MODE, 0xFF, 0x01, 1 }, { DD_LOCK, 0xFF, 0x00, 1 }, { DD_ENERGY, 0xFFFF, 1, 2, true, 600, true } },
+		/* outside a stage, or once Jill runs out of energy: the logo (DD-6) */
+		.menu = { { DD_V_OFFSTAGE, 0xFF, 1, 4 } },
+		/* while Equipment itself is open on the game screen: the logo, so
+		 * the same screen isn't on both (DD-5) */
+		.logoIf = { { DD_V_EQ_OPEN, 0xFF, 1, 4 } },
+		.room = { { DD_V_KEY, 0, 0, 4 } },
+		.virt = dd_virt,
+		/* the title's DRILL DOZER badge and red drill bit inside its O,
+		 * past the Health & Safety screen (DD-1) */
+		.logo = { .wait = 360, .pressStart = true, .wait2 = 1100, .mask = &logoMaskDD, .rev = 1 },
 	},
 };
 

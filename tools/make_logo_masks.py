@@ -432,12 +432,23 @@ def er(a):
     return ndimage.binary_dilation(m, iterations=1)
 
 
+def dd(a):
+    """Drill Dozer (USA): the DRILL DOZER badge and the red drill bit inside
+    its O, to the outside of the badge's cyan-and-white rim, without the
+    black buffer around it on BG0, the rubble sprites, the TM, PRESS START
+    or the copyright line."""
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    ys = np.mgrid[0:H, 0:W][0]
+    rim = (ys >= 34) & (ys <= 110) & ((b > r) | (g > r) | ((r == 255) & (g == 255) & (b == 255)))
+    return largest(ndimage.binary_fill_holes(rim))
+
+
 MASKS = (("THPS2", thps2), ("SK8", sk8), ("THPS3", thps3), ("DBZ", dbz),
          ("GS2E", gs2), ("GS2D", gs2_dial), ("GS2F", gs2_dial), ("GS2I", gs2), ("GS2S", gs2_dial),
          ("GS2J", gs2), ("CNK", cnk), ("CNKJ", cnk_jpn),
          ("DBZ2", dbz2), ("DBZ2J", dbz2_jpn), ("BF", bf),
          ("VR3", vr3), ("VR3J", vr3), ("GT3", gt3), ("GT3J", gt3_jpn),
-         ("NFO", nfo), ("NFOP", nfo_eur), ("AMW", amw), ("ER", er))
+         ("NFO", nfo), ("NFOP", nfo_eur), ("AMW", amw), ("ER", er), ("DD", dd))
 
 
 def runs(mask):

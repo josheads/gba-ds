@@ -1,0 +1,703 @@
+{
+ "game": "Drill Dozer",
+ "rules": "docs/games/drill-dozer.md",
+ "cases": [
+  {
+   "id": "dd-logo-v49e",
+   "kind": "logo",
+   "rom": "V49E",
+   "desc": "V49E logo extraction",
+   "rules": [
+    "GEN-1",
+    "DD-1"
+   ],
+   "golden": [
+    "logo"
+   ]
+  },
+  {
+   "id": "dd-us-title",
+   "rom": "V49E",
+   "state": "drill-dozer/us-title.ss",
+   "desc": "the title screen: the logo",
+   "rules": [
+    "DD-6"
+   ],
+   "shots": {
+    "start": 60
+   },
+   "checks": [
+    {
+     "rule": "DD-6",
+     "what": "no Equipment capture",
+     "type": "no_log",
+     "match": "map updated"
+    },
+    {
+     "rule": "DD-6",
+     "what": "the idle logo's dark grey",
+     "type": "pixels",
+     "shot": "start",
+     "probes": [
+      [
+       60,
+       90,
+       "303030"
+      ],
+      [
+       960,
+       680,
+       "303030"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dd-us-file",
+   "rom": "V49E",
+   "state": "drill-dozer/us-file.ss",
+   "desc": "file select: the logo",
+   "rules": [
+    "DD-6"
+   ],
+   "shots": {
+    "start": 60
+   },
+   "checks": [
+    {
+     "rule": "DD-6",
+     "what": "no Equipment capture",
+     "type": "no_log",
+     "match": "map updated"
+    },
+    {
+     "rule": "DD-6",
+     "what": "the idle logo's dark grey",
+     "type": "pixels",
+     "shot": "start",
+     "probes": [
+      [
+       60,
+       90,
+       "303030"
+      ],
+      [
+       960,
+       680,
+       "303030"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dd-us-trailer",
+   "rom": "V49E",
+   "state": "drill-dozer/us-trailer.ss",
+   "desc": "the Red Dozer Trailer hub: the logo",
+   "rules": [
+    "DD-6"
+   ],
+   "shots": {
+    "start": 60
+   },
+   "checks": [
+    {
+     "rule": "DD-6",
+     "what": "no Equipment capture",
+     "type": "no_log",
+     "match": "map updated"
+    },
+    {
+     "rule": "DD-6",
+     "what": "the idle logo's dark grey",
+     "type": "pixels",
+     "shot": "start",
+     "probes": [
+      [
+       60,
+       90,
+       "303030"
+      ],
+      [
+       960,
+       680,
+       "303030"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dd-us-worldmap",
+   "rom": "V49E",
+   "state": "drill-dozer/us-worldmap.ss",
+   "desc": "the world map: the logo",
+   "rules": [
+    "DD-6"
+   ],
+   "shots": {
+    "start": 60
+   },
+   "checks": [
+    {
+     "rule": "DD-6",
+     "what": "no Equipment capture",
+     "type": "no_log",
+     "match": "map updated"
+    },
+    {
+     "rule": "DD-6",
+     "what": "the idle logo's dark grey",
+     "type": "pixels",
+     "shot": "start",
+     "probes": [
+      [
+       60,
+       90,
+       "303030"
+      ],
+      [
+       960,
+       680,
+       "303030"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dd-us-stage1",
+   "rom": "V49E",
+   "state": "drill-dozer/us-stage1.ss",
+   "desc": "in Stage 1-1 (Dark Pit): the Equipment screen without its Help and Back prompts; the live HUD kept on the game screen",
+   "rules": [
+    "DD-2",
+    "DD-4"
+   ],
+   "shots": {
+    "start": 60,
+    "later": 180
+   },
+   "golden": [
+    "start"
+   ],
+   "checks": [
+    {
+     "rule": "DD-2",
+     "what": "a capture was shown",
+     "type": "log",
+     "match": "map updated"
+    },
+    {
+     "rule": "DD-2",
+     "what": "Equipment header badge and top-right stripe",
+     "type": "pixels",
+     "shot": "start",
+     "probes": [
+      [
+       362,
+       106,
+       "FFFFF7"
+      ],
+      [
+       914,
+       106,
+       "FF9C52"
+      ]
+     ]
+    },
+    {
+     "rule": "DD-2",
+     "what": "the (A) prompt sprite and Help word left out",
+     "type": "not_pixels",
+     "shot": "start",
+     "probes": [
+      [
+       726,
+       630,
+       "7BD6B5"
+      ],
+      [
+       786,
+       638,
+       "FFFFFF"
+      ]
+     ]
+    },
+    {
+     "rule": "DD-2",
+     "what": "periodic refresh settles on the exact same pose",
+     "type": "same",
+     "a": {
+      "shot": "start",
+      "rect": [
+       32,
+       64,
+       992,
+       704
+      ],
+      "screen": "second"
+     },
+     "b": {
+      "shot": "later",
+      "rect": [
+       32,
+       64,
+       992,
+       704
+      ],
+      "screen": "second"
+     },
+     "frac": 0.0
+    },
+    {
+     "rule": "DD-4",
+     "what": "the live Energy bar kept on the game screen",
+     "type": "pixels",
+     "shot": "start",
+     "screen": "game",
+     "probes": [
+      [
+       354,
+       106,
+       "E73939"
+      ],
+      [
+       426,
+       106,
+       "7BFF08"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dd-us-stage1-crop0",
+   "rom": "V49E",
+   "state": "drill-dozer/us-stage1.ss",
+   "config": {
+    "map_crop": "0"
+   },
+   "desc": "map_crop = 0: the Equipment screen with its Help and Back prompts",
+   "rules": [
+    "DD-2"
+   ],
+   "shots": {
+    "start": 60
+   },
+   "checks": [
+    {
+     "rule": "DD-2",
+     "what": "the (A) prompt sprite and Help word shown when map_crop = 0",
+     "type": "pixels",
+     "shot": "start",
+     "probes": [
+      [
+       726,
+       630,
+       "7BD6B5"
+      ],
+      [
+       786,
+       638,
+       "FFFFFF"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dd-us-door-room",
+   "rom": "V49E",
+   "state": "drill-dozer/us-at-door.ss",
+   "desc": "through a door from Stone Face Plaza into Watering Hole: the last picture stays during the fade, then updates straight away",
+   "rules": [
+    "GEN-6",
+    "DD-2",
+    "DD-3",
+    "DD-5"
+   ],
+   "input": [
+    [
+     80,
+     "B"
+    ],
+    [
+     84,
+     "-"
+    ]
+   ],
+   "shots": {
+    "before": 60,
+    "fade": 250,
+    "after": 500
+   },
+   "golden": [
+    "before",
+    "after"
+   ],
+   "checks": [
+    {
+     "rule": "DD-5",
+     "what": "the last Equipment picture stays during the door transition",
+     "type": "same",
+     "a": {
+      "shot": "before",
+      "rect": [
+       32,
+       64,
+       992,
+       704
+      ],
+      "screen": "second"
+     },
+     "b": {
+      "shot": "fade",
+      "rect": [
+       32,
+       64,
+       992,
+       704
+      ],
+      "screen": "second"
+     },
+     "frac": 0.0
+    },
+    {
+     "rule": "DD-3",
+     "what": "the room-name plate updates straight away after the door",
+     "type": "differs",
+     "frac": 0.02,
+     "a": {
+      "shot": "before",
+      "rect": [
+       64,
+       628,
+       476,
+       684
+      ],
+      "screen": "second"
+     },
+     "b": {
+      "shot": "after",
+      "rect": [
+       64,
+       628,
+       476,
+       684
+      ],
+      "screen": "second"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dd-us-upgrades",
+   "rom": "V49E",
+   "state": "drill-dozer/us-stage1.ss",
+   "desc": "underwater in Watering Hole with Mega Bit and three Energy Tanks: the Equipment screen updates at once",
+   "rules": [
+    "GEN-6",
+    "DD-2",
+    "DD-3"
+   ],
+   "input": [
+    [
+     100,
+     "LOAD:drill-dozer/us-watering.ss"
+    ]
+   ],
+   "shots": {
+    "before": 60,
+    "upgraded": 115
+   },
+   "golden": [
+    "upgraded"
+   ],
+   "checks": [
+    {
+     "rule": "DD-3",
+     "what": "immediate recapture when room, Drill Bit and Energy Tanks change",
+     "type": "differs",
+     "frac": 0.05,
+     "a": {
+      "shot": "before",
+      "rect": [
+       32,
+       64,
+       992,
+       704
+      ],
+      "screen": "second"
+     },
+     "b": {
+      "shot": "upgraded",
+      "rect": [
+       32,
+       64,
+       992,
+       704
+      ],
+      "screen": "second"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dd-us-showdown",
+   "rom": "V49E",
+   "state": "drill-dozer/us-showdown.ss",
+   "desc": "final boss room (Showdown) with Mega Bit, 3rd Gear and five Energy Tanks: the Equipment screen",
+   "rules": [
+    "DD-2",
+    "DD-4"
+   ],
+   "shots": {
+    "boss": 60
+   },
+   "checks": [
+    {
+     "rule": "DD-2",
+     "what": "a capture was shown",
+     "type": "log",
+     "match": "map updated"
+    },
+    {
+     "rule": "DD-2",
+     "what": "Equipment header badge and top-right stripe",
+     "type": "pixels",
+     "shot": "boss",
+     "probes": [
+      [
+       362,
+       106,
+       "FFFFF7"
+      ],
+      [
+       914,
+       106,
+       "FF9C52"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dd-us-menus",
+   "rom": "V49E",
+   "state": "drill-dozer/us-stage1.ss",
+   "desc": "in-stage menus: START's Save menu and Help keep the Equipment picture; SELECT's Equipment screen on the game screen shows the logo until Help opens or Equipment closes",
+   "rules": [
+    "DD-5"
+   ],
+   "input": [
+    [
+     80,
+     "START"
+    ],
+    [
+     84,
+     "-"
+    ],
+    [
+     184,
+     "B"
+    ],
+    [
+     188,
+     "-"
+    ],
+    [
+     288,
+     "SELECT"
+    ],
+    [
+     292,
+     "-"
+    ],
+    [
+     372,
+     "A"
+    ],
+    [
+     376,
+     "-"
+    ],
+    [
+     500,
+     "B"
+    ],
+    [
+     504,
+     "-"
+    ],
+    [
+     615,
+     "B"
+    ],
+    [
+     619,
+     "-"
+    ]
+   ],
+   "shots": {
+    "before": 60,
+    "save_menu": 180,
+    "eq_open": 370,
+    "help_open": 495,
+    "closed": 780
+   },
+   "golden": [
+    "save_menu",
+    "eq_open",
+    "help_open",
+    "closed"
+   ],
+   "checks": [
+    {
+     "rule": "DD-5",
+     "what": "START Save menu keeps the last Equipment picture",
+     "type": "same",
+     "a": {
+      "shot": "before",
+      "rect": [
+       32,
+       64,
+       992,
+       704
+      ],
+      "screen": "second"
+     },
+     "b": {
+      "shot": "save_menu",
+      "rect": [
+       32,
+       64,
+       992,
+       704
+      ],
+      "screen": "second"
+     }
+    },
+    {
+     "rule": "DD-5",
+     "what": "logo shown while SELECT Equipment itself is on the game screen",
+     "type": "pixels",
+     "shot": "eq_open",
+     "probes": [
+      [
+       60,
+       90,
+       "303030"
+      ],
+      [
+       960,
+       680,
+       "303030"
+      ]
+     ]
+    },
+    {
+     "rule": "DD-5",
+     "what": "Equipment picture returns while Help manual is open",
+     "type": "same",
+     "a": {
+      "shot": "before",
+      "rect": [
+       32,
+       64,
+       992,
+       704
+      ],
+      "screen": "second"
+     },
+     "b": {
+      "shot": "help_open",
+      "rect": [
+       32,
+       64,
+       992,
+       704
+      ],
+      "screen": "second"
+     }
+    },
+    {
+     "rule": "DD-5",
+     "what": "Equipment picture stays once Equipment closes",
+     "type": "same",
+     "a": {
+      "shot": "before",
+      "rect": [
+       32,
+       64,
+       992,
+       704
+      ],
+      "screen": "second"
+     },
+     "b": {
+      "shot": "closed",
+      "rect": [
+       32,
+       64,
+       992,
+       704
+      ],
+      "screen": "second"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dd-us-death",
+   "rom": "V49E",
+   "state": "drill-dozer/us-stage1.ss",
+   "desc": "running out of energy / Continue screen: back to the logo",
+   "rules": [
+    "DD-6"
+   ],
+   "input": [
+    [
+     100,
+     "LOAD:drill-dozer/us-gameover.ss"
+    ]
+   ],
+   "shots": {
+    "alive": 60,
+    "gameover": 140
+   },
+   "golden": [
+    "gameover"
+   ],
+   "checks": [
+    {
+     "rule": "DD-6",
+     "what": "second screen returned to the logo",
+     "type": "log",
+     "match": "back to the logo"
+    },
+    {
+     "rule": "DD-6",
+     "what": "the idle logo's dark grey",
+     "type": "pixels",
+     "shot": "gameover",
+     "probes": [
+      [
+       60,
+       90,
+       "303030"
+      ],
+      [
+       960,
+       680,
+       "303030"
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}
