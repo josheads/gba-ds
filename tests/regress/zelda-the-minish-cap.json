@@ -1,0 +1,656 @@
+{
+ "game": "The Legend of Zelda: The Minish Cap",
+ "rules": "docs/games/zelda-the-minish-cap.md",
+ "cases": [
+  {
+   "id": "tmc-logo-bzme",
+   "kind": "logo",
+   "rom": "BZME",
+   "desc": "BZME logo extraction",
+   "rules": [
+    "GEN-1",
+    "TMC-1"
+   ],
+   "golden": [
+    "logo"
+   ]
+  },
+  {
+   "id": "tmc-us-title",
+   "rom": "BZME",
+   "state": "zelda-the-minish-cap/us-title.ss",
+   "desc": "title screen: the logo stays on the second screen",
+   "rules": [
+    "TMC-1"
+   ],
+   "shots": {
+    "start": 60
+   },
+   "checks": [
+    {
+     "rule": "TMC-1",
+     "what": "no map capture on title screen",
+     "type": "no_log",
+     "match": "map updated"
+    },
+    {
+     "rule": "TMC-1",
+     "what": "idle logo dark grey backdrop",
+     "type": "pixels",
+     "shot": "start",
+     "probes": [
+      [
+       60,
+       90,
+       "303030"
+      ],
+      [
+       960,
+       680,
+       "303030"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "tmc-us-file-select",
+   "rom": "BZME",
+   "state": "zelda-the-minish-cap/us-file-select.ss",
+   "desc": "file select screen: the logo stays on the second screen",
+   "rules": [
+    "TMC-1"
+   ],
+   "shots": {
+    "start": 60
+   },
+   "checks": [
+    {
+     "rule": "TMC-1",
+     "what": "no map capture on file select",
+     "type": "no_log",
+     "match": "map updated"
+    },
+    {
+     "rule": "TMC-1",
+     "what": "idle logo dark grey backdrop",
+     "type": "pixels",
+     "shot": "start",
+     "probes": [
+      [
+       60,
+       90,
+       "303030"
+      ],
+      [
+       960,
+       680,
+       "303030"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "tmc-us-prologue",
+   "rom": "BZME",
+   "state": "zelda-the-minish-cap/us-prologue-room.ss",
+   "desc": "prologue in Smith's House before obtaining the World Map: logo stays and HUD stays on game screen",
+   "rules": [
+    "TMC-1",
+    "TMC-5",
+    "TMC-7"
+   ],
+   "shots": {
+    "start": 70
+   },
+   "golden": [
+    "start"
+   ],
+   "checks": [
+    {
+     "rule": "TMC-1",
+     "what": "no map capture before receiving the World Map",
+     "type": "no_log",
+     "match": "map updated"
+    },
+    {
+     "rule": "TMC-5",
+     "what": "before any map in the session, the logo stays",
+     "type": "pixels",
+     "shot": "start",
+     "probes": [
+      [
+       60,
+       90,
+       "303030"
+      ],
+      [
+       960,
+       680,
+       "303030"
+      ]
+     ]
+    },
+    {
+     "rule": "TMC-7",
+     "what": "hearts and rupee counter stay on the game screen",
+     "type": "pixels",
+     "screen": "game",
+     "shot": "start",
+     "probes": [
+      [
+       74,
+       102,
+       "FF5231"
+      ],
+      [
+       834,
+       658,
+       "4AFF18"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "tmc-us-minish-woods",
+   "rom": "BZME",
+   "state": "zelda-the-minish-cap/us-minish-woods.ss",
+   "desc": "outdoors in Minish Woods: regional map with steady Link and objective checkmark, no button prompts, HUD intact",
+   "rules": [
+    "TMC-2",
+    "TMC-4",
+    "TMC-7"
+   ],
+   "shots": {
+    "map_a": 70,
+    "map_b": 102
+   },
+   "golden": [
+    "map_a"
+   ],
+   "checks": [
+    {
+     "rule": "TMC-2",
+     "what": "regional map was captured",
+     "type": "log",
+     "match": "map updated"
+    },
+    {
+     "rule": "TMC-2",
+     "what": "Link's marker and red story objective checkmark both appear cleanly inside the stone frame",
+     "type": "pixels",
+     "screen": "second",
+     "shot": "map_a",
+     "probes": [
+      [
+       410,
+       226,
+       "FFFF00"
+      ],
+      [
+       474,
+       506,
+       "D64221"
+      ],
+      [
+       50,
+       82,
+       "FFF7A5"
+      ],
+      [
+       970,
+       354,
+       "E7F794"
+      ]
+     ]
+    },
+    {
+     "rule": "TMC-4",
+     "what": "markers hold completely steady 32 frames apart without blinking",
+     "type": "same",
+     "frac": 0.0,
+     "a": {
+      "shot": "map_a",
+      "screen": "second",
+      "rect": [
+       0,
+       0,
+       1024,
+       768
+      ]
+     },
+     "b": {
+      "shot": "map_b",
+      "screen": "second",
+      "rect": [
+       0,
+       0,
+       1024,
+       768
+      ]
+     }
+    },
+    {
+     "rule": "TMC-7",
+     "what": "action button HUD stays on the game screen",
+     "type": "pixels",
+     "screen": "game",
+     "shot": "map_a",
+     "probes": [
+      [
+       782,
+       102,
+       "31D618"
+      ],
+      [
+       970,
+       122,
+       "4AD6AD"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "tmc-us-hyrule-town-walk",
+   "rom": "BZME",
+   "state": "zelda-the-minish-cap/us-hyrule-town.ss",
+   "desc": "walking south in Hyrule Town updates the scrolled regional map on the second screen",
+   "rules": [
+    "TMC-2",
+    "TMC-4",
+    "GEN-6"
+   ],
+   "input": [
+    [
+     75,
+     "DOWN"
+    ],
+    [
+     165,
+     "-"
+    ]
+   ],
+   "shots": {
+    "before": 70,
+    "after": 245
+   },
+   "golden": [
+    "before",
+    "after"
+   ],
+   "checks": [
+    {
+     "rule": "TMC-2",
+     "what": "regional map updated after walking in Hyrule Town",
+     "type": "differs",
+     "frac": 0.02,
+     "a": {
+      "shot": "before",
+      "screen": "second",
+      "rect": [
+       0,
+       0,
+       1024,
+       768
+      ]
+     },
+     "b": {
+      "shot": "after",
+      "screen": "second",
+      "rect": [
+       0,
+       0,
+       1024,
+       768
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "tmc-us-indoors-dim",
+   "rom": "BZME",
+   "state": "zelda-the-minish-cap/us-minish-woods.ss",
+   "desc": "entering Mayor Hagen's House dims the outdoor map and stepping back outdoors brightens it again",
+   "rules": [
+    "TMC-5",
+    "GEN-6"
+   ],
+   "input": [
+    [
+     80,
+     "LOAD:zelda-the-minish-cap/us-mayor-house.ss"
+    ],
+    [
+     170,
+     "LOAD:zelda-the-minish-cap/us-minish-woods.ss"
+    ]
+   ],
+   "shots": {
+    "outdoors": 70,
+    "indoors": 155,
+    "back_out": 245
+   },
+   "golden": [
+    "indoors",
+    "back_out"
+   ],
+   "checks": [
+    {
+     "rule": "TMC-5",
+     "what": "indoors dims the previous outdoor map",
+     "type": "differs",
+     "frac": 0.1,
+     "a": {
+      "shot": "outdoors",
+      "screen": "second",
+      "rect": [
+       0,
+       0,
+       1024,
+       768
+      ]
+     },
+     "b": {
+      "shot": "indoors",
+      "screen": "second",
+      "rect": [
+       0,
+       0,
+       1024,
+       768
+      ]
+     }
+    },
+    {
+     "rule": "TMC-5",
+     "what": "indoors keeps dimmed outdoor map colours rather than the logo",
+     "type": "pixels",
+     "screen": "second",
+     "shot": "indoors",
+     "probes": [
+      [
+       50,
+       82,
+       "878257"
+      ],
+      [
+       274,
+       306,
+       "577122"
+      ]
+     ]
+    },
+    {
+     "rule": "TMC-5",
+     "what": "stepping back outdoors restores the bright outdoor map",
+     "type": "same",
+     "frac": 0.0,
+     "a": {
+      "shot": "outdoors",
+      "screen": "second",
+      "rect": [
+       0,
+       0,
+       1024,
+       768
+      ]
+     },
+     "b": {
+      "shot": "back_out",
+      "screen": "second",
+      "rect": [
+       0,
+       0,
+       1024,
+       768
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "tmc-us-pause-and-gameover",
+   "rom": "BZME",
+   "state": "zelda-the-minish-cap/us-hyrule-town.ss",
+   "desc": "opening the in-game pause menu keeps the last map; Game Over drops the map back to the logo",
+   "rules": [
+    "TMC-1",
+    "TMC-6",
+    "GEN-6"
+   ],
+   "input": [
+    [
+     80,
+     "START"
+    ],
+    [
+     83,
+     "-"
+    ],
+    [
+     150,
+     "LOAD:zelda-the-minish-cap/us-gameover.ss"
+    ]
+   ],
+   "shots": {
+    "live": 70,
+    "paused": 135,
+    "gameover": 210
+   },
+   "golden": [
+    "paused",
+    "gameover"
+   ],
+   "checks": [
+    {
+     "rule": "TMC-6",
+     "what": "opening the pause menu keeps the second screen's map picture",
+     "type": "same",
+     "frac": 0.0,
+     "a": {
+      "shot": "live",
+      "screen": "second",
+      "rect": [
+       0,
+       0,
+       1024,
+       768
+      ]
+     },
+     "b": {
+      "shot": "paused",
+      "screen": "second",
+      "rect": [
+       0,
+       0,
+       1024,
+       768
+      ]
+     }
+    },
+    {
+     "rule": "TMC-6",
+     "what": "Game Over sends the second screen back to the logo",
+     "type": "log",
+     "match": "back to the logo"
+    },
+    {
+     "rule": "TMC-1",
+     "what": "idle logo dark grey backdrop on Game Over",
+     "type": "pixels",
+     "shot": "gameover",
+     "probes": [
+      [
+       60,
+       90,
+       "303030"
+      ],
+      [
+       960,
+       680,
+       "303030"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "tmc-us-deepwood-shrine",
+   "rom": "BZME",
+   "state": "zelda-the-minish-cap/us-deepwood-nomap.ss",
+   "desc": "Deepwood Shrine floor map updates when Dungeon Map, Big Key and Compass are gained, and holds steady without chrome",
+   "rules": [
+    "TMC-3",
+    "TMC-4",
+    "GEN-6"
+   ],
+   "input": [
+    [
+     90,
+     "LOAD:zelda-the-minish-cap/us-deepwood-full.ss"
+    ]
+   ],
+   "shots": {
+    "nomap": 70,
+    "full_a": 170,
+    "full_b": 202
+   },
+   "golden": [
+    "nomap",
+    "full_a"
+   ],
+   "checks": [
+    {
+     "rule": "TMC-3",
+     "what": "dungeon map refreshes when Dungeon Map, Big Key and Compass are obtained",
+     "type": "differs",
+     "frac": 0.02,
+     "a": {
+      "shot": "nomap",
+      "screen": "second",
+      "rect": [
+       0,
+       0,
+       1024,
+       768
+      ]
+     },
+     "b": {
+      "shot": "full_a",
+      "screen": "second",
+      "rect": [
+       0,
+       0,
+       1024,
+       768
+      ]
+     }
+    },
+    {
+     "rule": "TMC-4",
+     "what": "dungeon map markers hold completely steady 32 frames apart",
+     "type": "same",
+     "frac": 0.0,
+     "a": {
+      "shot": "full_a",
+      "screen": "second",
+      "rect": [
+       0,
+       0,
+       1024,
+       768
+      ]
+     },
+     "b": {
+      "shot": "full_b",
+      "screen": "second",
+      "rect": [
+       0,
+       0,
+       1024,
+       768
+      ]
+     }
+    },
+    {
+     "rule": "TMC-3",
+     "what": "Dungeon Map, Big Key, Compass, boss skull and clean Ezlo corners are rendered without button chrome",
+     "type": "pixels",
+     "screen": "second",
+     "shot": "full_a",
+     "probes": [
+      [
+       50,
+       82,
+       "FFF7A5"
+      ],
+      [
+       970,
+       82,
+       "FFF7A5"
+      ],
+      [
+       122,
+       570,
+       "EFBD21"
+      ],
+      [
+       194,
+       546,
+       "FFD621"
+      ],
+      [
+       302,
+       546,
+       "FF5210"
+      ],
+      [
+       310,
+       278,
+       "FFFFFF"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "tmc-us-one-screen",
+   "rom": "BZME",
+   "state": "zelda-the-minish-cap/us-minish-woods.ss",
+   "desc": "one screen: gameplay stays centered with no second screen drawn",
+   "rules": [
+    "TMC-8"
+   ],
+   "config": {
+    "layout": "single"
+   },
+   "shots": {
+    "start": 60
+   },
+   "golden": [
+    "start"
+   ],
+   "checks": [
+    {
+     "rule": "TMC-8",
+     "what": "nothing drawn on a second screen",
+     "type": "uniform",
+     "screen": "second",
+     "shot": "start",
+     "rect": [
+      0,
+      325,
+      1024,
+      768
+     ],
+     "color": "000000",
+     "frac": 0.99
+    }
+   ]
+  }
+ ]
+}

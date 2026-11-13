@@ -5224,6 +5224,226 @@ static uint32_t dd_virt(Emu* e, uint32_t addr) {
 	return 0;
 }
 
+/* ------------------------------------------- The Legend of Zelda: The Minish Cap
+ *
+ * State & map structures (BZME; EWRAM and 0x03000BF0..0x03004050 IWRAM match
+ * across USA/EU/JP in zeldaret/tmc linker.ld):
+ *   gMain: task (0 Title, 1 File Select, 2 Game, 3 Game Over, 4 Staff Roll),
+ *     state (2 GAMETASK_MAIN), substate (2 UPDATE, 5 BARRELUPDATE, 7 SUBTASK).
+ *   gArea.areaMetadata: 0x01 overworld (regional Screen 6), 0x08 dungeon map
+ *     (floor Screen 5); inside houses/shops/caves (neither bit) the outdoor
+ *     map stays dimmed (dimWhenUnavailable). */
+#define TMC_MSG_STATE 0x02000050
+#define TMC_MENU_TYPE 0x02000085
+#define TMC_REG_SCROLL 0x0200008A
+#define TMC_BLINK_CNT 0x020000AC
+#define TMC_MAP_HINTS 0x02002A60
+#define TMC_WINDCRESTS 0x02002A80
+#define TMC_HEALTH 0x02002AEA
+#define TMC_INV0 0x02002B32
+#define TMC_INV_MAP 0x02002B43
+#define TMC_DNG_ITEMS 0x02002EAC
+#define TMC_MARKERS 0x02019EE0
+#define TMC_AREA_META 0x02033A90
+#define TMC_DNG_IDX 0x02033A93
+#define TMC_PAUSE_DIS 0x02034490
+#define TMC_PAUSE_SCR 0x02034491
+#define TMC_PAUSE_VAR 0x020344A1
+#define TMC_PAUSE_BLD 0x020344A6
+#define TMC_AREA 0x03000BF4
+#define TMC_ROOM 0x03000BF5
+#define TMC_SCROLL_FLG 0x03000BFF
+#define TMC_BG3_OFS 0x03000F7E
+#define TMC_FADE 0x03000FD0
+#define TMC_TASK 0x03001002
+#define TMC_STATE 0x03001003
+#define TMC_SUBSTATE 0x03001004
+#define TMC_TICKS 0x0300100C
+#define TMC_TRANS_OUT 0x030010A8
+#define TMC_PRIO_TMR 0x03003DC8
+#define TMC_CTRL_MODE 0x0300400B
+#define TMC_FRAMESTATE 0x03004028
+#define TMC_FRAMESTATE_LAST 0x03004029
+
+#define TMC_V_MENU 0xF00000A0
+#define TMC_V_LIVE 0xF00000A1
+#define TMC_V_ROOM 0xF00000A2
+
+static bool tmc_can_pause(Emu* e) {
+	if (emu_read8(e, TMC_TASK) != 2 || emu_read8(e, TMC_STATE) != 2) return false;
+	uint8_t sub = emu_read8(e, TMC_SUBSTATE);
+	if (sub != 2 && sub != 5) return false;
+	if (emu_read8(e, TMC_FADE) != 0 || emu_read8(e, TMC_TRANS_OUT) != 0) return false;
+	if (emu_read8(e, TMC_SCROLL_FLG) & 4) return false;
+	if (emu_read8(e, TMC_PAUSE_DIS) != 0 || (emu_read8(e, TMC_MSG_STATE) & 0x7F) != 0) return false;
+	if (emu_read8(e, TMC_HEALTH) == 0 || emu_read8(e, TMC_INV0) == 0) return false;
+	if (emu_read8(e, TMC_CTRL_MODE) != 0 || emu_read16(e, TMC_PRIO_TMR) != 0) return false;
+	uint8_t fs = emu_read8(e, TMC_FRAMESTATE);
+	if (fs == 0) fs = emu_read8(e, TMC_FRAMESTATE_LAST);
+	/* CheckInitPauseMenu blocks die (18), talkEzlo (19), itemGet (21), drown (22), stairs (28) */
+	if (fs == 18 || fs == 19 || fs == 21 || fs == 22 || fs == 28) return false;
+	uint8_t meta = emu_read8(e, TMC_AREA_META);
+	bool hasWorldMap = ((emu_read8(e, TMC_INV_MAP) >> 6) & 3) != 0;
+	return (meta & 0x08) != 0 || hasWorldMap;
+}
+
+static uint32_t tmc_virt(Emu* e, uint32_t addr) {
+	if (addr == TMC_V_MENU) return emu_read8(e, TMC_TASK) != 2 ? 1 : 0;
+	if (addr == TMC_V_LIVE) return tmc_can_pause(e) ? 1 : 0;
+	if (addr == TMC_V_ROOM) {
+		if (emu_read8(e, TMC_TASK) != 2) return 0;
+		uint8_t area = emu_read8(e, TMC_AREA);
+		uint8_t room = emu_read8(e, TMC_ROOM);
+		uint8_t d = emu_read8(e, TMC_DNG_IDX);
+		uint8_t dngItems = d < 16 ? emu_read8(e, TMC_DNG_ITEMS + d) : 0;
+		uint8_t hasWorldMap = (emu_read8(e, TMC_INV_MAP) >> 6) & 3;
+		uint16_t hints = emu_read16(e, TMC_MAP_HINTS);
+		return ((uint32_t) area << 24) | ((uint32_t) room << 16) | ((uint32_t) dngItems << 8) |
+		       ((uint32_t) hasWorldMap << 6) | ((hints ^ (hints >> 6)) & 0x3F) | 0x80000000u;
+	}
+	return 0;
+}
+
+static const SpriteRule tmcMapChrome[] = {
+	/* [MAP] tab badge (tiles 64, 96) and [L] / [R] tab buttons (tiles 32, 16), priority 1 */
+	{ -64, -32, 255, 159, 16, 127, 1 },
+	/* (B) Return prompt at top-right of the regional map (tiles 256..511, priority 0) */
+	{ 140, 0, 239, 32, 256, 511, 0 },
+};
+
+static bool tmc_settled(Emu* s, uint8_t wantScreen) {
+	return emu_read8(s, TMC_SUBSTATE) == 7 &&
+	       emu_read8(s, TMC_PAUSE_SCR) == wantScreen &&
+	       emu_read8(s, TMC_PAUSE_VAR) == 2 &&
+	       emu_read8(s, TMC_PAUSE_BLD) == 0 &&
+	       emu_read8(s, TMC_FADE) == 0 &&
+	       emu_read8(s, TMC_MENU_TYPE) == 1;
+}
+
+/* gScreen.bg3.xOffset/yOffset start at 0x03000F7E (2-byte aligned); emu_write32
+ * uses GBAPatch32 which aligns down to 0x03000F7C and zeros bg3.control. */
+static void tmc_zero_bg3_ofs(Emu* s) {
+	emu_write16(s, TMC_BG3_OFS, 0);
+	emu_write16(s, TMC_BG3_OFS + 2, 0);
+}
+
+static const char* tmc_compose(Emu* s, const void* state, uint32_t* out, int w, int h) {
+	if (!emu_state_load(s, state)) return "state load failed";
+	uint8_t meta = emu_read8(s, TMC_AREA_META);
+	bool hasDungeonMap = (meta & 0x08) != 0;
+	bool isOverworld = (meta & 0x01) != 0;
+	if (!hasDungeonMap && !isOverworld) return "map button did nothing";
+	if (!tmc_can_pause(s)) return "not in live play";
+
+	emu_write8(s, TMC_PAUSE_SCR, 4);
+	emu_write16(s, TMC_TICKS, 1);
+	if (isOverworld) emu_write32(s, TMC_WINDCRESTS, emu_read32(s, TMC_WINDCRESTS) | 0x0001FFFFu);
+
+	uint8_t firstScreen = hasDungeonMap ? 5 : 4;
+	emu_frame_blind(s, K_START);
+	emu_frame_blind(s, K_START);
+	bool settled = false;
+	for (int f = 0; f < 50 && !settled; ++f) {
+		if (emu_cancelled(s)) return "called off";
+		emu_frame_blind(s, 0);
+		settled = tmc_settled(s, firstScreen);
+	}
+	if (!settled) return "map screen did not appear";
+
+	if (hasDungeonMap) {
+		/* Hold BG3 offset at 0 and ticks = 0x22 across two drawn frames so
+		 * Screen 5 keeps steady blink phase and skips palette 12's (ticks & 7) == 0
+		 * rotation while mGBA finishes promoting BG layers. */
+		emu_hide_sprites(s, tmcMapChrome, 2);
+		tmc_zero_bg3_ofs(s);
+		emu_write16(s, TMC_TICKS, 0x22);
+		emu_frame(s, 0);
+		tmc_zero_bg3_ofs(s);
+		emu_write16(s, TMC_TICKS, 0x22);
+		emu_frame(s, 0);
+		emu_hide_sprites(s, NULL, 0);
+		if (emu_cancelled(s)) return "called off";
+		for (int y = 0; y < h && y < GBA_H; ++y)
+			memcpy(&out[y * w], &s->fb[y * GBA_W], (size_t) (w < GBA_W ? w : GBA_W) * sizeof(uint32_t));
+		return NULL;
+	}
+
+	emu_frame_blind(s, K_A);
+	emu_frame_blind(s, K_A);
+	settled = false;
+	for (int f = 0; f < 45 && !settled; ++f) {
+		if (emu_cancelled(s)) return "called off";
+		emu_frame_blind(s, 0);
+		settled = tmc_settled(s, 6);
+	}
+	if (!settled) return "regional map did not appear";
+
+	int maxScroll = (int) emu_read16(s, TMC_REG_SCROLL) * 2;
+	if (maxScroll > 0 && emu_read8(s, TMC_MARKERS) == 1) {
+		int linkY = (int) emu_read16(s, TMC_MARKERS + 6);
+		int scroll = (linkY - 64) & ~1;
+		if (scroll < 0) scroll = 0;
+		if (scroll > maxScroll) scroll = maxScroll;
+		emu_write16(s, TMC_REG_SCROLL, (uint16_t) scroll);
+	}
+	tmc_zero_bg3_ofs(s);
+	emu_frame(s, 0);
+
+	static void* tmcSnap;
+	static size_t tmcSnapCap;
+	size_t sz = emu_state_size(s);
+	if (sz > tmcSnapCap) {
+		void* p = realloc(tmcSnap, sz);
+		if (!p) return "out of memory";
+		tmcSnap = p;
+		tmcSnapCap = sz;
+	}
+	emu_state_save(s, tmcSnap);
+
+	static uint32_t tmcGoals[GBA_W * GBA_H];
+	static uint32_t tmcLink[GBA_W * GBA_H];
+	emu_hide_sprites(s, tmcMapChrome, 2);
+
+	/* Pass 1: goal / kinstone icons (unk2c wraps 0xFF -> 0x00: bit 5 = 0, scroll arrows bit 4 = 0) */
+	emu_state_load(s, tmcSnap);
+	tmc_zero_bg3_ofs(s);
+	emu_write8(s, TMC_BLINK_CNT, 0xFF);
+	emu_frame(s, 0);
+	tmc_zero_bg3_ofs(s);
+	emu_write8(s, TMC_BLINK_CNT, 0xFF);
+	emu_frame(s, 0);
+	memcpy(tmcGoals, s->fb, sizeof(tmcGoals));
+
+	/* Pass 2: Link's head (unk2c wraps 0x1F -> 0x20: bit 5 = 1, scroll arrows bit 4 = 0) */
+	emu_state_load(s, tmcSnap);
+	tmc_zero_bg3_ofs(s);
+	emu_write8(s, TMC_BLINK_CNT, 0x1F);
+	emu_frame(s, 0);
+	tmc_zero_bg3_ofs(s);
+	emu_write8(s, TMC_BLINK_CNT, 0x1F);
+	emu_frame(s, 0);
+	memcpy(tmcLink, s->fb, sizeof(tmcLink));
+
+	/* Pass 3: clean map background with all gMapDataBottomSpecial markers suppressed */
+	emu_state_load(s, tmcSnap);
+	emu_write16(s, TMC_MARKERS + 2, 0);
+	tmc_zero_bg3_ofs(s);
+	emu_write8(s, TMC_BLINK_CNT, 0xFF);
+	emu_frame(s, 0);
+	tmc_zero_bg3_ofs(s);
+	emu_write8(s, TMC_BLINK_CNT, 0xFF);
+	emu_frame(s, 0);
+
+	emu_hide_sprites(s, NULL, 0);
+	if (emu_cancelled(s)) return "called off";
+	for (int y = 0; y < h && y < GBA_H; ++y)
+		for (int x = 0; x < w && x < GBA_W; ++x) {
+			int i = y * GBA_W + x;
+			out[y * w + x] = (tmcLink[i] != s->fb[i]) ? tmcLink[i] : tmcGoals[i];
+		}
+	return NULL;
+}
+
 static const MapProfile profiles[] = {
 	{
 		.codes = { "A2CE" },
@@ -7530,6 +7750,27 @@ static const MapProfile profiles[] = {
 		/* the title's DRILL DOZER badge and red drill bit inside its O,
 		 * past the Health & Safety screen (DD-1) */
 		.logo = { .wait = 360, .pressStart = true, .wait2 = 1100, .mask = &logoMaskDD, .rev = 1 },
+	},
+	{
+		/* The Legend of Zelda: The Minish Cap (USA). Outdoors, the detailed
+		 * regional map (Screen 6) scrolled to Link with steady markers; in
+		 * dungeons, the floor map (Screen 5); indoors without a map, the
+		 * outdoor map dimmed: see tmc_compose (TMC-1..TMC-8) */
+		.codes = { "BZME" },
+		.title = "The Legend of Zelda: The Minish Cap",
+		.compose = tmc_compose,
+		.virt = tmc_virt,
+		.dimWhenUnavailable = true,
+		.crop_w = GBA_W,
+		.crop_h = GBA_H,
+		.live = { { TMC_V_LIVE, 0xFF, 1, 4 } },
+		.menu = { { TMC_V_MENU, 0xFF, 1, 4 } },
+		.room = { { TMC_V_ROOM, 0xFFFFFFFF, 0, 4 } },
+		/* title: START past the opening scene; BG2 holds the Four Sword and
+		 * ribbon, OBJ holds THE LEGEND OF ZELDA / The Minish Cap and the
+		 * golden pommel gem, all above row 122 before PRESS START spawns */
+		.logo = { .steps = { { 0, 140 }, { K_START, 4 }, { 0, 260 } },
+		          .layers = 0x14, .maxY = 122 },
 	},
 };
 
